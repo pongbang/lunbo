@@ -1,0 +1,259 @@
+<!--
+ * @Author: your name
+ * @Date: 2020-08-10 20:31:13
+ * @LastEditTime: 2020-08-10 21:42:39
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \案例\case00.html
+-->
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title> 轮播图 </title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    img {
+      display: block;
+    }
+
+    ul {
+      list-style: none;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+    }
+
+    .banner {
+      overflow: hidden;
+      position: relative;
+      width: 500px;
+      box-shadow: 0 0 8px #333;
+
+    }
+
+    .pic-list {
+      width: 400%;
+    }
+
+    .pic-list li {
+      float: left;
+    }
+
+    .slider {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      position: absolute;
+      bottom: 10px;
+      width: 380px;
+      left: 0;
+      right: 0;
+      margin: auto;
+    }
+
+    .slider span {
+      width: 45px;
+      height: 45px;
+      line-height: 45px;
+      background-color: orange;
+      text-align: center;
+      font-size: 20px;
+      color: #fff;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .btn-wrap span {
+      user-select: none;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      margin: auto;
+      width: 40px;
+      height: 85px;
+      line-height: 85px;
+      font-size: 32px;
+      color: #fff;
+      text-align: center;
+      background-color: rgba(0, 0, 0, .4);
+      cursor: pointer;
+    }
+
+    .btn-wrap span:hover {
+      background-color: rgba(0, 0, 0, .8);
+    }
+
+    .prev {
+      left: 0;
+    }
+
+    .next {
+      right: 0;
+    }
+
+    .slider .active {
+      background-color: pink;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="banner">
+    <ul class="pic-list">
+      <li><img src="images/1.jpg" alt="" width="500" height="200"></li>
+      <li><img src="images/2.jpg" alt="" width="500" height="200"></li>
+      <li><img src="images/3.jpg" alt="" width="500" height="200"></li>
+      <li><img src="images/4.jpg" alt="" width="500" height="200"></li>
+    </ul>
+    <div class="slider">
+
+    </div>
+    <div class="btn-wrap">
+      <span class="prev">&lt;</span>
+      <span class="next">&gt;</span>
+    </div>
+  </div>
+  <script src="js/common.js"></script>
+  <script>
+
+
+    /* 
+        oUl 的margin-left 改变 实现切换效果
+        index
+        oUl marginLeft 和 index 之间的关系是什么
+        0 0 
+        -index * pic.offsetWidth + 'px';   
+    */
+    var oBanner = $('.banner');
+    var oUl = $('.pic-list');
+    var aPic = $$('.pic-list li');
+    var oBtnWrap = $('.btn-wrap');
+    var oSlider = $('.slider');
+    var aSlider = oSlider.children;
+    var picW = aPic[0].offsetWidth;
+    var picLen = aPic.length;
+    var index = 0;
+    var timer;
+
+    var tapMap = {
+      'prev': function (e) {
+        move(function () {
+          index--;
+          index = (picLen + index) % picLen;
+        })
+      },
+      'next': function (e) {
+        move(function () {
+          index++;
+          index = index % picLen;
+        })
+      }
+    }
+
+    init();
+    autoTranslate();
+
+    function init() {
+      var spanStr = '';
+      var firstClass = '';
+      oUl.style.width = `${picLen * 100}%`;
+      for (var i = 0; i < picLen; i++) {
+        firstClass = ''
+        if (i === 0) {
+          firstClass = 'class="active"';
+        }
+        spanStr += `<span ${firstClass}>${i + 1}</span>`;
+      }
+      oSlider.innerHTML = spanStr;
+    }
+
+    oBanner.addEventListener('mouseover', function () {
+      clearInterval(timer);
+    }, false);
+
+    oBanner.addEventListener('mouseout', function () {
+      autoTranslate();
+    }, false)
+
+    oBtnWrap.addEventListener('click', function (e) {
+      e = e || window.event;
+      if (e.target.tagName.toLowerCase() === 'span') {
+        var btn = e.target;
+        if (tapMap[btn.className] && typeof tapMap[btn.className] === 'function') {
+          tapMap[btn.className](e);
+        }
+      }
+    }, false);
+
+    oSlider.addEventListener('mouseover', function (e) {
+      e = e || window.event;
+      if (e.target.tagName.toLowerCase() === 'span') {
+        var sliderBtn = e.target;
+        move(function () {
+          index = getElementIdx(sliderBtn);
+        })
+      }
+    }, false);
+
+    function move(callback) {
+      aSlider[index].classList.remove('active');
+      callback && callback(); //插入执行 index修改代码
+      aSlider[index].classList.add('active');
+      animate(oUl, {
+        marginLeft: -index * picW + 'px'
+      })
+    }
+
+    //自动切换 轮播 index++;
+    function autoTranslate() {
+      clearInterval(timer);
+      timer = setInterval(function () {
+        move(function () {
+          index++;
+          index = index % picLen;
+        });
+      }, 1000)
+    }
+
+    function animate(ele, json, callback) {
+      clearInterval(ele.time);//保证每一次都只有一个定时器在运行
+      var toggle = false;
+      var currLeft = parseInt(getStyle(ele, 'left'));
+      ele.time = setInterval(function () {
+        //每次定时循环都暂且认为他们都可以达到最终结果
+        toggle = true;
+        for (var key in json) {
+          var target = parseInt(json[key])
+          curr = parseInt(getStyle(ele, key));
+          speed = (target - curr) / 10;
+          speed = speed > 0 ? Math.ceil(speed) : Math.floor(speed);
+          if (curr === target) {
+            //width 先到了指定值了 定时器结束了 
+            ele.style[key] = target + 'px';
+          }
+          ele.style[key] = curr + speed + 'px';
+          if (curr !== target) {
+            //只要有某一个属性的值不到指定结果 关闭锁
+            toggle = false;
+          }
+        }
+        if (toggle) {
+          clearInterval(ele.time);
+          callback && callback();
+        }
+      }, 1000 / 60);
+    }
+
+  </script>
+</body>
+
+</html>

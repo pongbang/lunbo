@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>demo</title>
+  <style>
+    .banner {
+      position: relative;
+      margin: 0 auto;
+      width: 641px;
+      height: 641px;
+      font-size: 22px;
+      text-align: center;
+      box-shadow: 0 0 5px #333;
+    }
+
+    .slider {
+      position: absolute;
+      display: flex;
+      width: 400px;
+      height: 80px;
+      justify-content: space-around;
+      align-items: center;
+      bottom: 0;
+      right: 0;
+      left: 0;
+      margin: 0 auto;
+      line-height: 50px;
+      color: #fff;
+    }
+
+    .slider span {
+      width: 50px;
+      height: 50px;
+      background-color: #000;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .pre,
+    .next {
+      user-select: none;
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      top: 0;
+      bottom: 0;
+      margin: auto 0;
+      line-height: 40px;
+      background-color: #fff;
+      cursor: pointer;
+    }
+
+    .pre {
+      left: 0;
+    }
+
+    .next {
+      right: 0;
+    }
+
+    .btn span:hover {
+      background-color: pink;
+    }
+    .banner .on {
+      background-color: pink;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="banner">
+    <img class="pic" src="img/p1.jpg" width="641" height="641" alt="">
+    <div class="slider">
+      <span class="on">1</span>
+      <span>2</span>
+      <span>3</span>
+      <span>4</span>
+    </div>
+    <div class="btn">
+      <span class="pre">&lt;</span>
+      <span class="next">&gt;</span>
+    </div>
+  </div>
+  <script>
+    var slider = document.querySelector('.slider');
+    var pre = document.querySelector('.pre');
+    var next = document.querySelector('.next');
+    var pic = document.querySelector('.pic');
+    var index = 0;
+    var count = 4;
+    slider.onmouseover = function (e) {
+      if (e.target.tagName.toLowerCase() === 'span') {
+        change(function () {
+          index = e.target.innerText - 1;
+        });
+      }
+    }
+    pre.onclick = function () {
+      change(function () {
+        index--;
+        index = (index + count) % count;
+      });
+    }
+    next.onclick = function () {
+      change(function () {
+        index++;
+        index %= count;
+      });
+    }
+    function change(callback) {
+      //slider.children[index].style.backgroundColor = '#000';
+      slider.children[index].setAttribute('class','');
+      //slider.children[index].className='';
+      callback && callback();
+      slider.children[index].setAttribute('class','on');
+      //slider.children[index].className='on';
+      //slider.children[index].style.backgroundColor = 'pink';
+      pic.src = `img/p${index + 1}.jpg`;
+    }
+  </script>
+</body>
+
+</html>

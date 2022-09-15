@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>demo</title>
+  <style>
+    ul {
+      list-style: none;
+    }
+
+    .banner {
+      position: relative;
+      margin: 0 auto;
+      width: 641px;
+      height: 641px;
+      font-size: 22px;
+      text-align: center;
+      box-shadow: 0 0 5px #333;
+    }
+
+    .pic li {
+      position: absolute;
+      display: none;
+      left: 0;
+    }
+
+    .pic .active {
+      display: block;
+    }
+
+    .slider {
+      position: absolute;
+      display: flex;
+      width: 400px;
+      height: 80px;
+      justify-content: space-around;
+      align-items: center;
+      bottom: 0;
+      right: 0;
+      left: 0;
+      margin: 0 auto;
+      line-height: 50px;
+      color: #fff;
+    }
+
+    .slider span {
+      width: 50px;
+      height: 50px;
+      background-color: #000;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .pre,
+    .next {
+      user-select: none;
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      top: 0;
+      bottom: 0;
+      margin: auto 0;
+      line-height: 40px;
+      background-color: #fff;
+      cursor: pointer;
+    }
+
+    .pre {
+      left: 0;
+    }
+
+    .next {
+      right: 0;
+    }
+
+    .btn span:hover {
+      background-color: pink;
+    }
+
+    .banner .on {
+      background-color: pink;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="banner">
+    <ul class="pic">
+      <li class="active"><img src="img/p1.jpg" width="641" height="641" alt=""></li>
+      <li><img src="img/p2.jpg" width="641" height="641" alt=""></li>
+      <li><img src="img/p3.jpg" width="641" height="641" alt=""></li>
+      <li><img src="img/p4.jpg" width="641" height="641" alt=""></li>
+    </ul>
+    <div class="slider">
+    </div>
+    <div class="btn">
+      <span class="pre">&lt;</span>
+      <span class="next">&gt;</span>
+    </div>
+  </div>
+  <script>
+    var slider = document.querySelector('.slider');
+    var btn = document.querySelector('.btn');
+    var pic = document.querySelector('.pic');
+    var index = 0;
+    var sliderLength = pic.children.length;
+
+
+    /**
+    * @description: 添加事件监听(点击箭头)
+    * @param {String} 事件类型 
+    * @param {Function} 回调
+    * @param {Boolean} 阶段
+    * 事件委托
+    * 根据判断类型来确定调用哪一个
+    */
+    /* btn.addEventListener('click', function (e) {
+      if (e.target.tagName.toLowerCase() === 'span') {
+        var btnType = e.target.className; //next pre
+        btnType === 'next' ? change(function () {
+          index++;
+          index %= sliderLength;
+        }): change(function () {
+          index--;
+          index = (index + sliderLength) % sliderLength;
+        });
+      }
+    }, false); */
+
+
+    //映射地图
+    var btnTypeMap = {
+      pre: function () {
+        index--;
+        index = (index + sliderLength) % sliderLength;
+      },
+      next: function () {
+        index++;
+        index %= sliderLength;
+      }
+    }
+    /**
+    * @description: 添加事件监听(点击箭头)
+    * @param {String} 事件类型 
+    * @param {Function} 回调
+    * @param {Boolean} 阶段
+    * 事件委托
+    * 用映射(创对象(在上面,属性名对应),和之前星期几创数组一个道理)
+    * btnTypeMap[btnType] && change(btnTypeMap[btnType]) 有这个属性,就执行,没有就跳过
+    */
+    btn.addEventListener('click', function (e) {
+      if (e.target.tagName.toLowerCase() === 'span') {
+        var btnType = e.target.className; //next pre
+        btnTypeMap[btnType] && change(btnTypeMap[btnType]);
+        /* btnTypeMap[btnType] && switchSlider(function (参数) {
+          btnTypeMap[btnType]();
+          //操作
+        }); 
+        这样写,有利于其他操作和传参
+        */
+      }
+    }, false);
+    /**
+     * @description: 添加事件监听(鼠标移到slider栏)
+     * @param {String} 事件类型 
+     * @param {Function} 回调
+     * @param {Boolean} 阶段
+     * 事件委托
+     */
+    slider.addEventListener('mouseover', function (e) {
+      if (e.target.tagName.toLowerCase() === 'span') {
+        change(function () {
+          index = e.target.innerText - 1;
+        });
+      }
+    }, false)
+    /**
+     * @description: 改变图片和小圆点
+     * @param {Function} 回调,用来改变选的下标,根据下标来改变对应的小圆点和图片
+     * 让上一次对应的变回来(去掉样式)
+     * 中间的回调是改变index
+     * 让新的index对应的元素样式显出来
+     * callback && callback(),没有参数,就取消,有就执行
+     */
+    function change(callback) {
+      slider.children[index].classList.remove('on');
+      pic.children[index].classList.remove('active');
+      callback && callback();
+      slider.children[index].classList.add('on');
+      pic.children[index].classList.add('active');
+    }
+
+    /**
+     * @description: 创建slider的小圆点
+     * 创建段(临时容器),然后根据li的数量来对应创建有多少个小圆点
+     * 记得加入标号
+     * 记得循环完之后,在第一个小圆点上加初始类样式
+     * 用classList是添加类,不覆盖
+     */
+    function createSlider() {
+      var fragment = document.createDocumentFragment();
+      var vDom;
+      for (var i = 0; i < sliderLength; i++) {
+        vDom = document.createElement('span');
+        vDom.innerText = i + 1;
+        fragment.appendChild(vDom);
+      }
+      fragment.children[0].classList.add('on');
+      slider.appendChild(fragment);
+    }
+    createSlider();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>demo</title>
+  <style>
+    * {
+      padding: 0;
+      margin: 0;
+    }
+
+    ul {
+      list-style: none;
+    }
+
+    .banner {
+      position: relative;
+      overflow: hidden;
+      margin: 0 auto;
+      width: 641px;
+      height: 641px;
+      font-size: 22px;
+      text-align: center;
+      box-shadow: 0 0 5px #333;
+    }
+
+    .pic {
+      width: 100%;
+    }
+
+    .pic li {
+      float: left;
+    }
+
+    .slider {
+      position: absolute;
+      display: flex;
+      width: 400px;
+      height: 80px;
+      justify-content: space-around;
+      align-items: center;
+      bottom: 0;
+      right: 0;
+      left: 0;
+      margin: 0 auto;
+      line-height: 50px;
+      color: #fff;
+    }
+
+    .slider span {
+      width: 50px;
+      height: 50px;
+      background-color: #000;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .pre,
+    .next {
+      user-select: none;
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      top: 0;
+      bottom: 0;
+      margin: auto 0;
+      line-height: 40px;
+      background-color: #fff;
+      cursor: pointer;
+    }
+
+    .pre {
+      left: 0;
+    }
+
+    .next {
+      right: 0;
+    }
+
+    .btn span:hover {
+      background-color: pink;
+    }
+
+    .banner .on {
+      background-color: pink;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="banner">
+    <ul class="pic">
+      <li class="active"><img src="img/p1.jpg" width="641" height="641" alt=""></li>
+      <li><img src="img/p2.jpg" width="641" height="641" alt=""></li>
+      <li><img src="img/p3.jpg" width="641" height="641" alt=""></li>
+      <li><img src="img/p4.jpg" width="641" height="641" alt=""></li>
+    </ul>
+    <div class="slider">
+    </div>
+    <div class="btn">
+      <span class="pre">&lt;</span>
+      <span class="next">&gt;</span>
+    </div>
+  </div>
+  <script src="commom.js"></script>
+  <script>
+    var banner = $('.banner');
+    var slider = $('.slider');
+    var btn = $('.btn');
+    var pic = $('.pic');
+    var apic = $$('.pic li');
+    var aslider = $('.slider').children;
+    var index = 0;
+    var sliderLength = apic.length + 1;
+    var picW = apic[0].offsetWidth;
+    var time;
+
+    //初始化
+    function createSlider() {
+      var str = '';
+      pic.style.width = (sliderLength) * 100 + '%';
+      for (var i = 0; i < sliderLength - 1; i++) {
+        i === 0 ? str += `<span class="on">${i + 1}</span>` : str += `<span>${i + 1}</span>`;
+      }
+      slider.innerHTML = str;
+      pic.appendChild(apic[0].cloneNode(true));
+      apic = $$('.pic');
+      autoPlay();
+    }
+    createSlider();
+
+    //映射地图
+    var btnTypeMap = {
+      pre: function () {
+        if (index === 0) {//处理在第一张图时(按pre)变为最开始
+          index = sliderLength - 1;
+          pic.style.marginLeft = -index * picW + 'px';
+        }
+        index--;
+        index = (index + sliderLength) % sliderLength;
+      },
+      next: function () {
+        if (index === sliderLength - 1) {//处理在第五张图时(按next)变为最开始
+          index = 0;
+          pic.style.marginLeft = -index * picW + 'px';
+        }
+        index++;
+        index %= sliderLength;
+      }
+    }
+
+    banner.addEventListener('mouseover', function () {
+      clearInterval(time);
+    }, false);
+    banner.addEventListener('mouseout', function () {
+      autoPlay();
+    }, false);
+
+    function autoPlay() {
+      clearInterval(time);
+      time = setInterval(function () {
+        change(btnTypeMap['next']);
+      }, 2000);
+    }
+
+    function change(callback) {//改变小圆点样式:小圆点是4对应5,所以注意第五张图时,为1就行
+      aslider[index % (sliderLength - 1)].classList.remove('on');
+      callback && callback();
+      aslider[index % (sliderLength - 1)].classList.add('on');
+      animate(pic, { marginLeft: -index * picW });
+    }
+
+    btn.addEventListener('click', function (e) {
+      e = e || window.event;
+      if (e.target.tagName.toLowerCase() === 'span') {
+        e.target.className && typeof btnTypeMap[e.target.className] === 'function' && change(btnTypeMap[e.target.className]);
+      }
+    }, false);
+
+    slider.addEventListener('mouseover', function (e) {
+      e = e || window.event;
+      if (e.target.tagName.toLowerCase() === 'span') {
+        change(function () {
+          index = e.target.innerText - 1;
+        });
+      }
+    }, false);
+
+    //动画
+    function animate(ele, json, callback) {
+      clearInterval(ele.time);
+      var toggle = false;
+      var curLeft = parseInt(getStyle(ele, 'left'));
+
+      ele.time = setInterval(function () {
+        toggle = true;
+        for (var key in json) {
+          var target = parseInt(json[key]);
+          var curr = parseInt(getStyle(ele, key));
+          speed = (target - curr) / 10;
+          speed = speed > 0 ? Math.ceil(speed) : Math.floor(speed);
+          if (curr === target) {
+            ele['style'][key] = target + 'px';
+          } else {
+            ele['style'][key] = curr + speed + 'px';
+            toggle = false;
+          }
+        }
+        if (toggle) {
+          clearInterval(ele.time);
+          callback && callback();
+        }
+      }, 1000 / 60);
+
+    }
+  </script>
+</body>
+
+</html>
