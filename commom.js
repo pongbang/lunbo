@@ -1,4 +1,4 @@
-/*
+/* 
  * @description: 获取元素对象下标
  * @param: {Object} item 需要获取的DOM对象
  * @return: {Number} i 下标
